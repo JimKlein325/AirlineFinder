@@ -8,176 +8,176 @@ namespace Airline
 {
   public class FlightTest : IDisposable
   {
-    public ToDoTest()
+    public FlightTest()
     {
       DBConfiguration.ConnectionString = "Data Source=(localdb)\\mssqllocaldb;Initial Catalog=airline_test;Integrated Security=SSPI;";
     }
 
+    [Fact]
+    public void Test_DatabaseEmptyAtFirst()
+    {
+      //Arrange, Act
+      int result = Flight.GetAll().Count;
+
+      //Assert
+      Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void Test_EqualOverrideTrueForSameDescription()
+    {
+      //Arrange, Act
+      Flight firstFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+      Flight secondFlight = new Flight("Mow the lawn",  firstFlight.GetDepartureTime(), firstFlight.GetId(), 1, 1);
+
+      //Assert
+      Assert.Equal(firstFlight, secondFlight);
+    }
+
+    [Fact]
+    public void Test_Save()
+    {
+      //Arrange
+      Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+      testFlight.Save();
+
+      //Act
+      List<Flight> result = Flight.GetAll();
+      List<Flight> testList = new List<Flight>{testFlight};
+
+      //Assert
+      Assert.Equal(testList, result);
+    }
+
+    [Fact]
+    public void Test_SaveAssignsIdToObject()
+    {
+      //Arrange
+      Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+      testFlight.Save();
+
+      //Act
+      Flight savedFlight = Flight.GetAll()[0];
+
+      int result = savedFlight.GetId();
+      int testId = testFlight.GetId();
+
+      //Assert
+      Assert.Equal(testId, result);
+    }
+
+    [Fact]
+    public void Test_FindFindsFlightInDatabase()
+    {
+      //Arrange
+      Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+      testFlight.Save();
+
+      //Act
+      Flight result = Flight.Find(testFlight.GetId());
+
+      //Assert
+      Assert.Equal(testFlight, result);
+    }
+
     // [Fact]
-    // public void Test_DatabaseEmptyAtFirst()
-    // {
-    //   //Arrange, Act
-    //   int result = Task.GetAll().Count;
-    //
-    //   //Assert
-    //   Assert.Equal(0, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_EqualOverrideTrueForSameDescription()
-    // {
-    //   //Arrange, Act
-    //   Task firstTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   Task secondTask = new Task("Mow the lawn",  firstTask.GetDueDate(), firstTask.GetId());
-    //
-    //   //Assert
-    //   Assert.Equal(firstTask, secondTask);
-    // }
-    //
-    // [Fact]
-    // public void Test_Save()
+    // public void Test_AddCity_AddsCityToFlight()
     // {
     //   //Arrange
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
+    //   Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+    //   testFlight.Save();
+    //
+    //   City testCity = new City("Home stuff");
+    //   testCity.Save();
     //
     //   //Act
-    //   List<Task> result = Task.GetAll();
-    //   List<Task> testList = new List<Task>{testTask};
+    //   testFlight.AddCity(testCity);
+    //
+    //   List<City> result = testFlight.GetCities();
+    //   List<City> testList = new List<City>{testCity};
     //
     //   //Assert
     //   Assert.Equal(testList, result);
     // }
     //
     // [Fact]
-    // public void Test_SaveAssignsIdToObject()
+    // public void Test_GetCities_ReturnsAllFlightCities()
     // {
     //   //Arrange
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
+    //   Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+    //   testFlight.Save();
+    //
+    //   City testCity1 = new City("Home stuff");
+    //   testCity1.Save();
+    //
+    //   City testCity2 = new City("Work stuff");
+    //   testCity2.Save();
     //
     //   //Act
-    //   Task savedTask = Task.GetAll()[0];
-    //
-    //   int result = savedTask.GetId();
-    //   int testId = testTask.GetId();
-    //
-    //   //Assert
-    //   Assert.Equal(testId, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_FindFindsTaskInDatabase()
-    // {
-    //   //Arrange
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
-    //
-    //   //Act
-    //   Task result = Task.Find(testTask.GetId());
-    //
-    //   //Assert
-    //   Assert.Equal(testTask, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_AddCategory_AddsCategoryToTask()
-    // {
-    //   //Arrange
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
-    //
-    //   Category testCategory = new Category("Home stuff");
-    //   testCategory.Save();
-    //
-    //   //Act
-    //   testTask.AddCategory(testCategory);
-    //
-    //   List<Category> result = testTask.GetCategories();
-    //   List<Category> testList = new List<Category>{testCategory};
+    //   testFlight.AddCity(testCity1);
+    //   List<City> result = testFlight.GetCities();
+    //   List<City> testList = new List<City> {testCity1};
     //
     //   //Assert
     //   Assert.Equal(testList, result);
     // }
     //
     // [Fact]
-    // public void Test_GetCategories_ReturnsAllTaskCategories()
+    // public void Test_Delete_DeletesFlightAssociationsFromDatabase()
     // {
     //   //Arrange
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
-    //
-    //   Category testCategory1 = new Category("Home stuff");
-    //   testCategory1.Save();
-    //
-    //   Category testCategory2 = new Category("Work stuff");
-    //   testCategory2.Save();
-    //
-    //   //Act
-    //   testTask.AddCategory(testCategory1);
-    //   List<Category> result = testTask.GetCategories();
-    //   List<Category> testList = new List<Category> {testCategory1};
-    //
-    //   //Assert
-    //   Assert.Equal(testList, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_Delete_DeletesTaskAssociationsFromDatabase()
-    // {
-    //   //Arrange
-    //   Category testCategory = new Category("Home stuff");
-    //   testCategory.Save();
+    //   City testCity = new City("Home stuff");
+    //   testCity.Save();
     //
     //   string testDescription = "Mow the lawn";
-    //   Task testTask = new Task(testDescription, Task.DefaultDate);
-    //   testTask.Save();
+    //   Flight testFlight = new Flight(testDescription, Flight.DefaultDate, 0, 1, 1);
+    //   testFlight.Save();
     //
     //   //Act
-    //   testTask.AddCategory(testCategory);
-    //   testTask.Delete();
+    //   testFlight.AddCity(testCity);
+    //   testFlight.Delete();
     //
-    //   List<Task> resultCategoryTasks = testCategory.GetTasks();
-    //   List<Task> testCategoryTasks = new List<Task> {};
-    //
-    //   //Assert
-    //   Assert.Equal(testCategoryTasks, resultCategoryTasks);
-    // }
-    //
-    // [Fact]
-    // public void Test_Equals_DateTimeComparing()
-    // {
-    //   //Arrange
-    //   DateTime otherDate = new DateTime(2000, 1, 1);
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //
-    //   // Act
-    //   DateTime testTaskDueDate = testTask.GetDueDate();
+    //   List<Flight> resultCityFlights = testCity.GetFlights();
+    //   List<Flight> testCityFlights = new List<Flight> {};
     //
     //   //Assert
-    //   Assert.NotEqual(otherDate, testTaskDueDate);
+    //   Assert.Equal(testCityFlights, resultCityFlights);
     // }
-    //
-    // [Fact]
-    // public void Test_SetDueDate_DateTimeComparing()
-    // {
-    //   //Arrange
-    //   DateTime otherDate = new DateTime(2000, 1, 1);
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //
-    //   // Act
-    //   testTask.SetDueDate(otherDate);
-    //   DateTime testTaskDueDate = testTask.GetDueDate();
-    //
-    //   //Assert
-    //   Assert.Equal(otherDate, testTaskDueDate);
-    // }
+
+    [Fact]
+    public void Test_Equals_DateTimeComparing()
+    {
+      //Arrange
+      DateTime otherDate = new DateTime(2000, 1, 1);
+      Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+
+      // Act
+      DateTime testFlightDepartureTime = testFlight.GetDepartureTime();
+
+      //Assert
+      Assert.NotEqual(otherDate, testFlightDepartureTime);
+    }
+
+    [Fact]
+    public void Test_SetDepartureTime_DateTimeComparing()
+    {
+      //Arrange
+      DateTime otherDate = new DateTime(2000, 1, 1);
+      Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+
+      // Act
+      testFlight.SetDepartureTime(otherDate);
+      DateTime testFlightDepartureTime = testFlight.GetDepartureTime();
+
+      //Assert
+      Assert.Equal(otherDate, testFlightDepartureTime);
+    }
 
 
     public void Dispose()
     {
-      // Task.DeleteAll();
-      // Category.DeleteAll();
+      Flight.DeleteAll();
+      // City.DeleteAll();
     }
 
   }

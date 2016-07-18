@@ -59,8 +59,8 @@ namespace Airline
 
       while(rdr.Read())
       {
-        int cityId = rdr.GetInt32(0);
-        string cityName = rdr.GetString(1);
+        int cityId = rdr.GetInt32(1);
+        string cityName = rdr.GetString(0);
         City newCity = new City(cityName, cityId);
         allCities.Add(newCity);
       }
@@ -90,9 +90,12 @@ namespace Airline
       nameParameter.Value = this.GetName();
       cmd.Parameters.Add(nameParameter);
       rdr = cmd.ExecuteReader();
+      //this._id = 38;
+
 
       while(rdr.Read())
       {
+        // Console.WriteLine(rdr.GetString(1));
         this._id = rdr.GetInt32(0);
       }
       if (rdr != null)
@@ -136,14 +139,15 @@ namespace Airline
           DateTime departureDateTime = rdr.GetDateTime(1);
           int thisFlightId = rdr.GetInt32(2);
           int statusId = rdr.GetInt32(3);
-          Flight foundFlight = new Flight(airline, departureDateTime, thisFlightId, statusId);
+          int flightPath = rdr.GetInt32(4);
+          Flight foundFlight = new Flight(airline, departureDateTime, thisFlightId, statusId, flightPath);
           flights.Add(foundFlight);
         }
         if (rdr != null)
         {
           rdr.Close();
         }
-      }
+
 
       if (conn != null)
       {
@@ -170,8 +174,8 @@ namespace Airline
 
       while(rdr.Read())
       {
-        foundCityId = rdr.GetInt32(0);
-        foundCityDescription = rdr.GetString(1);
+        foundCityId = rdr.GetInt32(1);
+        foundCityDescription = rdr.GetString(0);
       }
       City foundCity = new City(foundCityDescription, foundCityId);
 
@@ -191,7 +195,7 @@ namespace Airline
       SqlConnection conn = DB.Connection();
       conn.Open();
 
-      SqlCommand cmd = new SqlCommand("DELETE FROM cities WHERE id = @CityId; DELETE FROM cities_flights WHERE city_id = @CityId;", conn);
+      SqlCommand cmd = new SqlCommand("DELETE FROM cities WHERE id = @CityId;", conn);
       SqlParameter cityIdParameter = new SqlParameter();
       cityIdParameter.ParameterName = "@CityId";
       cityIdParameter.Value = this.GetId();
@@ -209,7 +213,7 @@ namespace Airline
     {
       SqlConnection conn = DB.Connection();
       conn.Open();
-      SqlCommand cmd = new SqlCommand("DELETE FROM cities; DELETE FROM cities_flights;", conn);
+      SqlCommand cmd = new SqlCommand("DELETE FROM cities;", conn);
       cmd.ExecuteNonQuery();
     }
   }

@@ -4,34 +4,36 @@ using System;
 
 namespace Airline
 {
-  public class Task
+  public class Flight
   {
     public static DateTime DefaultDate = new DateTime(2015, 1, 18);
+    private string _airline;
     private int _id;
-    private string _description;
-    private DateTime _dueDate;
+    private int _statusId;
+    private int _flightPathId;
+    private DateTime _departureTime;
 
-    public Task(string description, DateTime dueDate , int id = 0)
+    public Flight(string airline, DateTime departureTime , int id = 0, int statusId = 0, int flightPath = 0)
     {
       _id = id;
-      _description = description;
-      _dueDate = dueDate;
+      _airline = airline;
+      _departureTime = departureTime;
+      _statusId = statusId;
+      _flightPathId = flightPath;
     }
 
 
-    public override bool Equals(System.Object otherTask)
+    public override bool Equals(System.Object otherFlight)
     {
-      if (!(otherTask is Task))
+      if (!(otherFlight is Flight))
       {
         return false;
       }
       else
       {
-        Task newTask = (Task) otherTask;
-        bool idEquality = this.GetId() == newTask.GetId();
-        bool descriptionEquality = this.GetDescription() == newTask.GetDescription();
-        bool dueDateEquality = this.GetDueDate() == newTask.GetDueDate();
-        return (idEquality && descriptionEquality && dueDateEquality);
+        Flight newFlight = (Flight) otherFlight;
+        bool idEquality = this.GetId() == newFlight.GetId();
+        return (idEquality);
       }
     }
 
@@ -39,40 +41,50 @@ namespace Airline
     {
       return _id;
     }
-    public string GetDescription()
+    public string GetAirline()
     {
-      return _description;
+      return _airline;
     }
-    public void SetDescription(string newDescription)
+    public void SetAirline(string newAirline)
     {
-      _description = newDescription;
+      _airline = newAirline;
     }
-    public DateTime GetDueDate()
+    public DateTime GetDepartureTime()
     {
-      return _dueDate;
+      return _departureTime;
     }
-    public void SetDueDate(DateTime newDueDate)
+    public void SetDepartureTime(DateTime newDepartureTime)
     {
-      _dueDate = newDueDate;
+      _departureTime = newDepartureTime;
     }
-
-    public static List<Task> GetAll()
+    public int GetStatusId()
     {
-      List<Task> allTasks = new List<Task>{};
+      return _statusId;
+    }
+    public void SetStatusId(int newStatusId)
+    {
+      _statusId = newStatusId;
+    }
+    public string GetStatusString(int id)
+    {
       SqlConnection conn = DB.Connection();
       SqlDataReader rdr = null;
       conn.Open();
 
-      SqlCommand cmd = new SqlCommand("SELECT * FROM tasks ORDER BY due_date ASC;", conn);
+      SqlCommand cmd = new SqlCommand("SELECT name FROM statuses WHERE id = @statusId;", conn);
+
+      SqlParameter statusParameter = new SqlParameter();
+      statusParameter.ParameterName = "@statusId";
+      statusParameter.Value = id;
+
+      cmd.Parameters.Add(statusParameter);
+
       rdr = cmd.ExecuteReader();
 
+      string flightStatus = "";
       while(rdr.Read())
       {
-        int taskId = rdr.GetInt32(0);
-        string taskDescription = rdr.GetString(1);
-        DateTime taskDueDate = rdr.GetDateTime(2);
-        Task newTask = new Task(taskDescription, taskDueDate, taskId);
-        allTasks.Add(newTask);
+        flightStatus = rdr.GetString(0);
       }
       if (rdr != null)
       {
@@ -82,7 +94,71 @@ namespace Airline
       {
         conn.Close();
       }
-      return allTasks;
+      return flightStatus;
+    }
+
+    public string GetFullFlightString()
+    {
+
+      FlightPath thisFlightPath = FlightPath.Find(_flightPathId);
+
+      string flightPathString = thisFlightPath.GetFlightPathString();
+
+      return GetAirline() +" "+ GetId().ToString()+":  " + GetStatusString(_statusId) +"- "+ flightPathString;
+    }
+
+    // public string[] GetAllFlightPathstrings()
+    // {
+    //   List<FlightPath> paths = FlightPath.GetAll();
+    //
+    //   for(int i = 0; i < paths.Count; i++)
+    //   {
+    //
+    //     paths.Add();
+    //   }
+    //   return paths;
+    // }
+
+    public int GetFlightPath()
+    {
+      return _flightPathId;
+    }
+    public void SetFlightPath(int newFlightPath)
+    {
+      _flightPathId = newFlightPath;
+    }
+
+    public static List<Flight> GetAll()
+    {
+      List<Flight> allFlights = new List<Flight>{};
+      SqlConnection conn = DB.Connection();
+      SqlDataReader rdr = null;
+      conn.Open();
+
+      SqlCommand cmd = new SqlCommand("SELECT * FROM flights ORDER BY departure_time ASC;", conn);
+
+
+      rdr = cmd.ExecuteReader();
+
+      while(rdr.Read())
+      {
+        string airline = rdr.GetString(0);
+        int flightId = rdr.GetInt32(2);
+        int statusId = rdr.GetInt32(3);
+        int flightPathId = rdr.GetInt32(4);
+        DateTime departureTime = rdr.GetDateTime(1);
+        Flight newFlight = new Flight(airline, departureTime, flightId, statusId, flightPathId);
+        allFlights.Add(newFlight);
+      }
+      if (rdr != null)
+      {
+        rdr.Close();
+      }
+      if (conn != null)
+      {
+        conn.Close();
+      }
+      return allFlights;
     }
 
     public void Save()
@@ -91,19 +167,32 @@ namespace Airline
       SqlDataReader rdr;
       conn.Open();
 
-      SqlCommand cmd = new SqlCommand("INSERT INTO tasks (description, due_date) OUTPUT INSERTED.id VALUES (@taskDescription, @taskDueDate);", conn);
+      SqlCommand cmd = new SqlCommand("INSERT INTO flights (airline, departure_time, status_id, flight_path_id) OUTPUT INSERTED.id VALUES (@airline, @departureTime, @statusId, @flightPathId);", conn);
 
       SqlParameter descriptionParameter = new SqlParameter();
-      descriptionParameter.ParameterName = "@TaskDescription";
-      descriptionParameter.Value = this.GetDescription();
+      descriptionParameter.ParameterName = "@airline";
+      descriptionParameter.Value = this.GetAirline();
 
       cmd.Parameters.Add(descriptionParameter);
 
-      SqlParameter dueDateParameter = new SqlParameter();
-      dueDateParameter.ParameterName = "@taskDueDate";
-      dueDateParameter.Value = this.GetDueDate();
+      SqlParameter departureTimeParameter = new SqlParameter();
+      departureTimeParameter.ParameterName = "@departureTime";
+      departureTimeParameter.Value = this.GetDepartureTime();
 
-      cmd.Parameters.Add(dueDateParameter);
+      cmd.Parameters.Add(departureTimeParameter);
+
+      SqlParameter statusIdParameter = new SqlParameter();
+      statusIdParameter.ParameterName = "@statusId";
+      statusIdParameter.Value = this.GetStatusId();
+
+      cmd.Parameters.Add(statusIdParameter);
+
+      SqlParameter flightPathIdParameter = new SqlParameter();
+      flightPathIdParameter.ParameterName = "@flightPathId";
+      flightPathIdParameter.Value = this.GetFlightPath();
+
+      cmd.Parameters.Add(flightPathIdParameter);
+
 
       rdr = cmd.ExecuteReader();
 
@@ -121,29 +210,34 @@ namespace Airline
       }
     }
 
-    public static Task Find(int id)
+    public static Flight Find(int id)
     {
       SqlConnection conn = DB.Connection();
       SqlDataReader rdr = null;
       conn.Open();
 
-      SqlCommand cmd = new SqlCommand("SELECT * FROM tasks WHERE id = @TaskId;", conn);
-      SqlParameter taskIdParameter = new SqlParameter();
-      taskIdParameter.ParameterName = "@TaskId";
-      taskIdParameter.Value = id.ToString();
-      cmd.Parameters.Add(taskIdParameter);
+      SqlCommand cmd = new SqlCommand("SELECT * FROM flights WHERE id = @FlightId;", conn);
+      SqlParameter flightIdParameter = new SqlParameter();
+      flightIdParameter.ParameterName = "@FlightId";
+      flightIdParameter.Value = id.ToString();
+      cmd.Parameters.Add(flightIdParameter);
       rdr = cmd.ExecuteReader();
 
-      int foundTaskId = 0;
-      string foundTaskDescription = null;
-      DateTime foundDueDate = DefaultDate;
+      int foundFlightId = 0;
+      int foundFlightPath = 0;
+      int foundFlightStatus = 0;
+      string foundAirline = null;
+      DateTime departureTime = DefaultDate;
+
       while(rdr.Read())
       {
-        foundTaskId = rdr.GetInt32(0);
-        foundTaskDescription = rdr.GetString(1);
-        foundDueDate = rdr.GetDateTime(2);
+        foundFlightStatus = rdr.GetInt32(3);
+        foundAirline = rdr.GetString(0);
+        departureTime = rdr.GetDateTime(1);
+        foundFlightId = rdr.GetInt32(2);
+        foundFlightPath = rdr.GetInt32(4);
       }
-      Task foundTask = new Task(foundTaskDescription, foundDueDate, foundTaskId);
+      Flight foundFlight = new Flight(foundAirline, departureTime, foundFlightId, foundFlightStatus, foundFlightPath);
 
       if (rdr != null)
       {
@@ -154,105 +248,47 @@ namespace Airline
         conn.Close();
       }
 
-      return foundTask;
+      return foundFlight;
     }
 
-    public void AddCategory(Category newCategory)
-    {
-      SqlConnection conn = DB.Connection();
-      conn.Open();
+    // public void AddCategory(Category newCategory)
+    // {
+    //   SqlConnection conn = DB.Connection();
+    //   conn.Open();
+    //
+    //   SqlCommand cmd = new SqlCommand("INSERT INTO categories_flights (category_id, flight_id) VALUES (@CategoryId, @FlightId);", conn);
+    //
+    //   SqlParameter categoryIdParameter = new SqlParameter();
+    //   categoryIdParameter.ParameterName = "@CategoryId";
+    //   categoryIdParameter.Value = newCategory.GetId();
+    //   cmd.Parameters.Add(categoryIdParameter);
+    //
+    //   SqlParameter flightIdParameter = new SqlParameter();
+    //   flightIdParameter.ParameterName = "@FlightId";
+    //   flightIdParameter.Value = this.GetId();
+    //   cmd.Parameters.Add(flightIdParameter);
+    //
+    //   cmd.ExecuteNonQuery();
+    //
+    //   if (conn != null)
+    //   {
+    //     conn.Close();
+    //   }
+    // }
 
-      SqlCommand cmd = new SqlCommand("INSERT INTO categories_tasks (category_id, task_id) VALUES (@CategoryId, @TaskId);", conn);
-
-      SqlParameter categoryIdParameter = new SqlParameter();
-      categoryIdParameter.ParameterName = "@CategoryId";
-      categoryIdParameter.Value = newCategory.GetId();
-      cmd.Parameters.Add(categoryIdParameter);
-
-      SqlParameter taskIdParameter = new SqlParameter();
-      taskIdParameter.ParameterName = "@TaskId";
-      taskIdParameter.Value = this.GetId();
-      cmd.Parameters.Add(taskIdParameter);
-
-      cmd.ExecuteNonQuery();
-
-      if (conn != null)
-      {
-        conn.Close();
-      }
-    }
-
-    public List<Category> GetCategories()
-    {
-      SqlConnection conn = DB.Connection();
-      SqlDataReader rdr = null;
-      conn.Open();
-
-      SqlCommand cmd = new SqlCommand("SELECT category_id FROM categories_tasks WHERE task_id = @TaskId;", conn);
-
-      SqlParameter taskIdParameter = new SqlParameter();
-      taskIdParameter.ParameterName = "@TaskId";
-      taskIdParameter.Value = this.GetId();
-      cmd.Parameters.Add(taskIdParameter);
-
-      rdr = cmd.ExecuteReader();
-
-      List<int> categoryIds = new List<int> {};
-
-      while (rdr.Read())
-      {
-        int categoryId = rdr.GetInt32(0);
-        categoryIds.Add(categoryId);
-      }
-      if (rdr != null)
-      {
-        rdr.Close();
-      }
-
-      List<Category> categories = new List<Category> {};
-
-      foreach (int categoryId in categoryIds)
-      {
-        SqlDataReader queryReader = null;
-        SqlCommand categoryQuery = new SqlCommand("SELECT * FROM categories WHERE id = @CategoryId;", conn);
-
-        SqlParameter categoryIdParameter = new SqlParameter();
-        categoryIdParameter.ParameterName = "@CategoryId";
-        categoryIdParameter.Value = categoryId;
-        categoryQuery.Parameters.Add(categoryIdParameter);
-
-        queryReader = categoryQuery.ExecuteReader();
-        while (queryReader.Read())
-        {
-          int thisCategoryId = queryReader.GetInt32(0);
-          string categoryName = queryReader.GetString(1);
-          Category foundCategory = new Category(categoryName, thisCategoryId);
-          categories.Add(foundCategory);
-        }
-        if (queryReader != null)
-        {
-          queryReader.Close();
-        }
-      }
-      if (conn != null)
-      {
-        conn.Close();
-      }
-      return categories;
-    }
 
     public void Delete()
     {
       SqlConnection conn = DB.Connection();
       conn.Open();
 
-      SqlCommand cmd = new SqlCommand("DELETE FROM tasks WHERE id = @TaskId; DELETE FROM categories_tasks WHERE task_id = @TaskId;", conn);
+      SqlCommand cmd = new SqlCommand("DELETE FROM flights WHERE id = @FlightId; DELETE FROM departures WHERE flight_id = @FlightId;DELETE FROM arrivals WHERE flight_id = @FlightId;", conn);
 
-      SqlParameter taskIdParameter = new SqlParameter();
-      taskIdParameter.ParameterName = "@TaskId";
-      taskIdParameter.Value = this.GetId();
+      SqlParameter flightIdParameter = new SqlParameter();
+      flightIdParameter.ParameterName = "@FlightId";
+      flightIdParameter.Value = this.GetId();
 
-      cmd.Parameters.Add(taskIdParameter);
+      cmd.Parameters.Add(flightIdParameter);
       cmd.ExecuteNonQuery();
 
       if (conn != null)
@@ -265,7 +301,7 @@ namespace Airline
     {
       SqlConnection conn = DB.Connection();
       conn.Open();
-      SqlCommand cmd = new SqlCommand("DELETE FROM tasks; DELETE FROM categories_tasks;", conn);
+      SqlCommand cmd = new SqlCommand("DELETE FROM flights; DELETE FROM departures;DELETE FROM arrivals;", conn);
       cmd.ExecuteNonQuery();
     }
   }

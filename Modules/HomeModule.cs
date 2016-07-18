@@ -2,16 +2,20 @@ using System.Collections.Generic;
 using Nancy;
 using Nancy.ViewEngines.Razor;
 
-namespace ToDoList
+namespace Airline
 {
   public class HomeModule : NancyModule
   {
     public HomeModule()
     {
-      // Get["/"] = _ => {
-      //   List<Category> AllCategories = Category.GetAll();
-      //   return View["index.cshtml", AllCategories];
-      // };
+      Get["/"] = _ => {
+        return View["index.cshtml"];
+      };
+
+      Get["/flights"] = _ => {
+        List<Flight> allFlights = Flight.GetAll();
+        return View["flights.cshtml", allFlights];
+      };
       //
       // Get["/categories"] = _ => {
       //   List<Category> AllCategories = Category.GetAll();

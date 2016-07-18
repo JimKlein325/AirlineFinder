@@ -12,166 +12,142 @@ namespace Airline
     {
       DBConfiguration.ConnectionString = "Data Source=(localdb)\\mssqllocaldb;Initial Catalog=airline_test;Integrated Security=SSPI;";
     }
-    //
+
+    [Fact]
+    public void Test_CitiesEmptyAtFirst()
+    {
+      //Arrange, Act
+      int result = City.GetAll().Count;
+      //Assert
+      Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void Test_Equal_ReturnsTrueForSameName()
+    {
+      //Arrange, Act
+      City firstCity = new City("Household chores");
+      City secondCity = new City("Household chores");
+
+      //Assert
+      Assert.Equal(firstCity, secondCity);
+     }
+
+    [Fact]
+    public void Test_Save_SavesCityToDatabase()
+    {
+      //Arrange
+      City testCity = new City("Household chores");
+      testCity.Save();
+
+      //Act
+      List<City> result = City.GetAll();
+      List<City> testList = new List<City>{testCity};
+
+      //Assert
+      Assert.Equal(testList, result);
+    }
+
+    [Fact]
+    public void Test_Save_AssignsIdToCityObject()
+    {
+      //Arrange
+      City testCity = new City("Household chores");
+      testCity.Save();
+
+      //Act
+      City savedCity = City.GetAll()[0];
+
+      int result = savedCity.GetId();
+      int testId = testCity.GetId();
+
+      //Assert
+      Assert.Equal(testId, result);
+    }
+
+    [Fact]
+    public void Test_Find_FindsCityInDatabase()
+    {
+      //Arrange
+      City testCity = new City("Household chores");
+      testCity.Save();
+
+      //Act
+      City foundCity = City.Find(testCity.GetId());
+
+      //Assert
+      Assert.Equal(testCity, foundCity);
+    }
+
+    [Fact]
+    public void Test_Delete_DeletesCityFromDatabase()
+    {
+      //Arrange
+      string name1 = "Home stuff";
+      City testCity1 = new City(name1);
+      testCity1.Save();
+
+      string name2 = "Work stuff";
+      City testCity2 = new City(name2);
+      testCity2.Save();
+
+      //Act
+      testCity1.Delete();
+      List<City> resultCities = City.GetAll();
+      List<City> testCityList = new List<City> {testCity2};
+
+      //Assert
+      Assert.Equal(testCityList, resultCities);
+    }
+
     // [Fact]
-    // public void Test_CategoriesEmptyAtFirst()
-    // {
-    //   //Arrange, Act
-    //   int result = Category.GetAll().Count;
-    //   //Assert
-    //   Assert.Equal(0, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_Equal_ReturnsTrueForSameName()
-    // {
-    //   //Arrange, Act
-    //   Category firstCategory = new Category("Household chores");
-    //   Category secondCategory = new Category("Household chores");
-    //
-    //   //Assert
-    //   Assert.Equal(firstCategory, secondCategory);
-    //  }
-    //
-    // [Fact]
-    // public void Test_Save_SavesCategoryToDatabase()
+    // public void Test_GetFlights_ReturnsAllCityDepartureFlights()
     // {
     //   //Arrange
-    //   Category testCategory = new Category("Household chores");
-    //   testCategory.Save();
+    //   City testCity = new City("Household chores");
+    //   testCity.Save();
+    //
+    //   Flight testFlight1 = new Flight("Mow the lawn", Flight.DefaultDate, 0, 1, 1);
+    //   testFlight1.Save();
+    //
+    //   Flight testFlight2 = new Flight("Buy plane ticket", Flight.DefaultDate, 0, 1, 1);
+    //   testFlight2.Save();
     //
     //   //Act
-    //   List<Category> result = Category.GetAll();
-    //   List<Category> testList = new List<Category>{testCategory};
+    //   testCity.AddFlight(testFlight1);
+    //   List<Flight> savedFlights = testCity.GetFlights();
+    //   List<Flight> testList = new List<Flight> {testFlight1};
     //
     //   //Assert
-    //   Assert.Equal(testList, result);
+    //   Assert.Equal(testList, savedFlights);
     // }
-    //
+
     // [Fact]
-    // public void Test_Save_AssignsIdToCategoryObject()
+    // public void Test_Delete_DeletesCityAssociationsFromDatabase()
     // {
     //   //Arrange
-    //   Category testCategory = new Category("Household chores");
-    //   testCategory.Save();
-    //
-    //   //Act
-    //   Category savedCategory = Category.GetAll()[0];
-    //
-    //   int result = savedCategory.GetId();
-    //   int testId = testCategory.GetId();
-    //
-    //   //Assert
-    //   Assert.Equal(testId, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_Find_FindsCategoryInDatabase()
-    // {
-    //   //Arrange
-    //   Category testCategory = new Category("Household chores");
-    //   testCategory.Save();
-    //
-    //   //Act
-    //   Category foundCategory = Category.Find(testCategory.GetId());
-    //
-    //   //Assert
-    //   Assert.Equal(testCategory, foundCategory);
-    // }
-    //
-    // [Fact]
-    // public void Test_Delete_DeletesCategoryFromDatabase()
-    // {
-    //   //Arrange
-    //   string name1 = "Home stuff";
-    //   Category testCategory1 = new Category(name1);
-    //   testCategory1.Save();
-    //
-    //   string name2 = "Work stuff";
-    //   Category testCategory2 = new Category(name2);
-    //   testCategory2.Save();
-    //
-    //   //Act
-    //   testCategory1.Delete();
-    //   List<Category> resultCategories = Category.GetAll();
-    //   List<Category> testCategoryList = new List<Category> {testCategory2};
-    //
-    //   //Assert
-    //   Assert.Equal(testCategoryList, resultCategories);
-    // }
-    //
-    // [Fact]
-    // public void Test_AddTask_AddsTaskToCategory()
-    // {
-    //   //Arrange
-    //   Category testCategory = new Category("Household chores");
-    //   testCategory.Save();
-    //
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
-    //
-    //   Task testTask2 = new Task("Water the garden", Task.DefaultDate);
-    //   testTask2.Save();
-    //
-    //   //Act
-    //   testCategory.AddTask(testTask);
-    //   testCategory.AddTask(testTask2);
-    //
-    //   List<Task> result = testCategory.GetTasks();
-    //   List<Task> testList = new List<Task>{testTask, testTask2};
-    //
-    //   //Assert
-    //   Assert.Equal(testList, result);
-    // }
-    //
-    // [Fact]
-    // public void Test_GetTasks_ReturnsAllCategoryTasks()
-    // {
-    //   //Arrange
-    //   Category testCategory = new Category("Household chores");
-    //   testCategory.Save();
-    //
-    //   Task testTask1 = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask1.Save();
-    //
-    //   Task testTask2 = new Task("Buy plane ticket", Task.DefaultDate);
-    //   testTask2.Save();
-    //
-    //   //Act
-    //   testCategory.AddTask(testTask1);
-    //   List<Task> savedTasks = testCategory.GetTasks();
-    //   List<Task> testList = new List<Task> {testTask1};
-    //
-    //   //Assert
-    //   Assert.Equal(testList, savedTasks);
-    // }
-    //
-    // [Fact]
-    // public void Test_Delete_DeletesCategoryAssociationsFromDatabase()
-    // {
-    //   //Arrange
-    //   Task testTask = new Task("Mow the lawn", Task.DefaultDate);
-    //   testTask.Save();
+    //   Flight testFlight = new Flight("Mow the lawn", Flight.DefaultDate);
+    //   testFlight.Save();
     //
     //   string testName = "Home stuff";
-    //   Category testCategory = new Category(testName);
-    //   testCategory.Save();
+    //   City testCity = new City(testName);
+    //   testCity.Save();
     //
     //   //Act
-    //   testCategory.AddTask(testTask);
-    //   testCategory.Delete();
+    //   testCity.AddFlight(testFlight);
+    //   testCity.Delete();
     //
-    //   List<Category> resultTaskCategories = testTask.GetCategories();
-    //   List<Category> testTaskCategories = new List<Category> {};
+    //   List<City> resultFlightCities = testFlight.GetCities();
+    //   List<City> testFlightCities = new List<City> {};
     //
     //   //Assert
-    //   Assert.Equal(testTaskCategories, resultTaskCategories);
+    //   Assert.Equal(testFlightCities, resultFlightCities);
     // }
 
     public void Dispose()
     {
-      // Task.DeleteAll();
-      // Category.DeleteAll();
+      // Flight.DeleteAll();
+      City.DeleteAll();
     }
   }
 }
